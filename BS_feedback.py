@@ -17,32 +17,27 @@ class Deck:
     def shuffle(self):
         random.shuffle(self.cards)
 
-    def deal(self, num_hands, num_cards):
-        """Deal `num_hands` hands with `num_cards` cards each."""
-        hands = [self.cards[i*num_cards:(i+1)*num_cards] for i in range(num_hands)]
-        self.cards = self.cards[num_hands*num_cards:]
-        return hands
+#I understand how the Card and Deck classes work to create a standard deck of 52 cards.
 
 class Player:
     def __init__(self, name):
         self.name = name
         self.hand = []
 
-    def play_card(self, rank):
-        """Plays a card of the given rank, if available."""
-        for card in self.hand:
-            if card.rank == rank:
-                self.hand.remove(card)
-                return card
-        return None
+    def play_cards(self, card_indices):
+        """Plays cards based on the indices provided."""
+        selected_cards = [self.hand[i] for i in sorted(card_indices, reverse=True)]
+        for index in sorted(card_indices, reverse=True):
+            del self.hand[index]
+        return selected_cards
 
     def add_cards(self, cards):
         """Adds cards to the player's hand."""
         self.hand.extend(cards)
 
-    def has_rank(self, rank):
-        """Check if the player has a card of the given rank."""
-        return any(card.rank == rank for card in self.hand)
+    def has_card(self, rank, suit=None):
+        """Check if the player has a specific card by rank and optionally suit."""
+        return any(card.rank == rank and (suit is None or card.suit == suit) for card in self.hand)
 
     def __repr__(self):
         return f"{self.name}: {len(self.hand)} cards"
@@ -53,69 +48,81 @@ class BSGame:
         self.deck.shuffle()
         self.pile = []  # Cards currently in the pile
         self.players = [Player("Human"), Player("AI")]
-        self.turn_index = 0  # Track whose turn it is
-        self.current_rank = '2'  # Initial rank to be played
+        self.current_rank = None  # Rank being played this round
+        self.starting_player_index = None
 
     def start_game(self):
-        # Deal cards
-        hands = self.deck.deal(len(self.players), len(self.deck.cards) // len(self.players))
+        # Deal all cards between the two players
+        hands = [self.deck.cards[:26], self.deck.cards[26:]]
         for player, hand in zip(self.players, hands):
             player.hand = hand
 
-    def play_turn(self):
-        current_player = self.players[self.turn_index]
-        print(f"{current_player.name}'s turn. Current rank: {self.current_rank}")
+        # Determine the starting player based on who has the Ace of Spades
+        for i, player in enumerate(self.players):
+            if player.has_card("A", "Spades"):
+                self.starting_player_index = i
+                break
 
-        if current_player.name == "Human":
-            self.human_turn(current_player)
+        print(f"{self.players[self.starting_player_index].name} has the Ace of Spades and will start the game.")
+
+    def play_turn(self, player):
+        print(f"{player.name}'s turn. Current rank: {self.current_rank if self.current_rank != None else 'Choose a rank to start.'}")
+
+        if player.name == "Human":
+            self.human_turn(player)
         else:
-            self.ai_turn(current_player)
-
-        # Move to next turn
-        self.turn_index = (self.turn_index + 1) % len(self.players)
-        self.current_rank = self.next_rank(self.current_rank)
+            self.ai_turn(player)
 
     def human_turn(self, player):
-        print(f"Your hand: {player.hand}")
-        rank = input(f"Enter the rank you want to play (must be {self.current_rank}): ")
-        card = player.play_card(rank)
-        if card:
-            print(f"You played {card}")
-            self.pile.append(card)
-        else:
-            print(f"You don't have any {rank}. You must bluff or pass!")
+        print(f"Your hand: {list(enumerate(player.hand))}")
+        print(f"The rank being played this round is: {self.current_rank}")
+
+        # Human chooses cards to play
+        card_indices = input(f"Select the indices of cards to play (comma-separated): ")
+        try:
+            card_indices = list(map(int, card_indices.split(',')))
+            played_cards = player.play_cards(card_indices)
+
+            # Human claims to play cards of the current rank
+            print(f"You claim to play {len(played_cards)} card(s) as {self.current_rank}")
+
+            # Add the played cards to the pile
+            self.pile.extend(played_cards)
+            print(f"You placed {len(played_cards)} card(s) in the pile.")
+
+        except (ValueError, IndexError):
+            print("Invalid indices. Turn skipped.")
+
 
     def ai_turn(self, player):
         print("AI is thinking...")
-        # Simple AI: play if it has the rank, otherwise bluff
-        if player.has_rank(self.current_rank):
-            card = player.play_card(self.current_rank)
-            print(f"AI played {card}")
-            self.pile.append(card)
+
+        if self.current_rank is None:
+            self.current_rank = random.choice(['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'])
+            print(f"AI chose to start with rank: {self.current_rank}")
+
+        # Simple AI: play all cards of the current rank, or bluff with random cards
+        matching_cards = [i for i, card in enumerate(player.hand) if card.rank == self.current_rank]
+        if matching_cards:
+            played_cards = player.play_cards(matching_cards)
         else:
-            bluff_card = random.choice(player.hand)
-            player.hand.remove(bluff_card)
-            print(f"AI played {bluff_card}")
-            self.pile.append(bluff_card)
+            played_cards = player.play_cards([random.randint(0, len(player.hand) - 1)])
 
-    def next_rank(self, rank):
-        ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-        return ranks[(ranks.index(rank) + 1) % len(ranks)]
+        self.pile.extend(played_cards)
+        print(f"AI played: {played_cards}")
 
-    def is_bs_called(self):
-        # Placeholder for BS logic
-        return False
+    def play_game(self):
+        self.start_game()
+        current_player_index = self.starting_player_index
 
-    def check_bs(self, player):
-        # Placeholder to handle consequences of calling BS
-        pass
+        while True:
+            current_player = self.players[current_player_index]
+            self.play_turn(current_player)
+
+            # Check for pass or BS logic here (to be implemented)
+
+            current_player_index = (current_player_index + 1) % len(self.players)
 
 if __name__ == "__main__":
     game = BSGame()
-    game.start_game()
-    print("Starting the game!")
-
-    while True:
-        game.play_turn()
-        if input("Continue? (y/n): ") == 'n':
-            break
+    game.play_game()
