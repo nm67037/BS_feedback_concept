@@ -21,10 +21,11 @@ class Deck:
             #the for loop creates each card as a string and puts the cards in an array
     def shuffle(self):
         random.shuffle(self.cards)
-
+###########################################################switching from cards to players
 class Player: #add properties/actions/attributes of players. Right now, "player" is given a name.
     def __init__(self,name):
         self.name = name
+        self.hand = []
     
     def __represent__(self):
         return self.name
@@ -38,16 +39,30 @@ class AI(Player):
     def __init__(self):
         name = "Ani"
         super().__init__(name)
+        
 
-#human = human()
-#AI = AI()
+############################################################################
 
-#print(AI.name)
-#print(human.name)
+class BSGame:
+    def __init__(self):
+        self.deck = Deck()
+        self.human = human()
+        self.AI = AI()
+        self.players = [human,AI]
 
-def start_game():
-    Deck = Deck()
-    human = human()
-    AI = AI()
+    def start_game(self):
+        self.deck.shuffle()
 
-start_game()
+        # Deal half the deck to each player
+        mid = len(self.deck.cards) // 2
+        self.human.hand = self.deck.cards[:mid]  # Human gets the first half
+        self.AI.hand = self.deck.cards[mid:]  # AI gets the second half
+
+        for player in self.players:
+            print(player.hand)
+
+
+game = BSGame()
+game.start_game()
+
+
