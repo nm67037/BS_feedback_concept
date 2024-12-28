@@ -71,7 +71,8 @@ class BSGame:
         self.current_rank = None #should be a string, can convert to integer later if needed (J=11, Q=12, A=1, etc)
         self.current_pile = [] #be careful with the AI knowing about the pile. They can only remember the top play, NOT everything underneath
         self.discard_pile = [] #when all players pass
-
+        self.cards_to_move = [] #current play that goes from hand to current pile. NOT what is SAID by player
+    
     def start_game(self):
         print(f"Hello, {self.human.name}. My name is {self.AI.name}. Let's play!")
         self.deck.shuffle()
@@ -96,8 +97,14 @@ class BSGame:
                             self.current_rank = current_rank_beta
                             break #only way to exit the loop
                         else:
-                            print("That is not a valid rank, " f"{player.name}. Please choose a valid rank.")
-                print(self.current_rank)
+                            current_rank_beta = input("That is not a valid rank, " f"{player.name}. Please choose a valid rank.")
+                self.cards_to_move.append('AS')
+                for card in self.cards_to_move:
+                    player.hand.remove(card) #maybe make this into a callable function, since this action will happen a lot.
+                
+                self.current_pile.extend(self.cards_to_move)
+                print(self.current_pile)    
+                #print(self.current_rank)
                            
 game = BSGame()
 game.start_game()
