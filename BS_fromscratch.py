@@ -73,29 +73,30 @@ class BSGame:
         self.discard_pile = [] #when all players pass
 
     def start_game(self):
+        print(f"Hello, {self.human.name}. My name is {self.AI.name}. Let's play!")
         self.deck.shuffle()
     
         # Deal half the deck to each player
         mid = len(self.deck.cards) // 2
         self.human.hand = self.deck.cards[:mid]  # Human gets the first half
         self.AI.hand = self.deck.cards[mid:]  # AI gets the second half
+        print(f"Below is your deck, {self.human.name}. Don't worry, I can't see it :)" )
         print(self.human.hand)
 
         for player in self.players:
            #print(f"{player.name}'s hand: {player.hand}")
             if 'AS' in player.hand:
-                print(f"{player.name} has the Ace of Spades, they will put the card face up and start the game.")
                 if player == self.AI:
-                  print(self.AI.hand)
+                  print(f"Look's like I have the Ace of Spades, {self.human.name}. I'll put it down and pick a rank to start the game!")
                   self.current_rank = self.AI.determine_mode_rank()
                 else:
                     while True:
-                        current_rank_beta = input(f"{player.name}, please choose the rank to start the game with.")
+                        current_rank_beta = input(f"If you have the Ace of Spades, {player.name}, please put it down and choose the rank to start the game with!").strip()
                         if current_rank_beta in self.deck.ranks: #any rank, not just ones human has
                             self.current_rank = current_rank_beta
                             break #only way to exit the loop
                         else:
-                            print("That is not a valid rank," f"{player.name}, please choose a valid rank. ")
+                            print("That is not a valid rank, " f"{player.name}. Please choose a valid rank.")
                 print(self.current_rank)
                            
 game = BSGame()
