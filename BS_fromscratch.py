@@ -18,7 +18,7 @@ class Deck:
         self.ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
         self.suits = ["H", "D", "C", "S"]
 
-        self.cards = [str(Card(self.suit, self.rank)) for suit in self.suits for rank in self.ranks]
+        self.cards = [str(Card(suit, rank)) for suit in self.suits for rank in self.ranks]
             #the for loop creates each card as a string and puts the cards in an array
     def shuffle(self):
         random.shuffle(self.cards)
