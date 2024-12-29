@@ -27,13 +27,13 @@ class Player: #add properties/actions/attributes of players. Right now, "player"
     def __init__(self, name: str, hand: list):
         self.name = name
         self.hand = hand
-    
-    def __repr__(self):
-        return self.name
-       # return self.hand
 
     def __str__(self):
         return f"Player: {self.name}, Hand: {self.hand}"
+    
+    def declare_cards(self, declared_cards: list):
+        self.declared_cards = declared_cards
+        print(f"{self.name}, ")
 
 
 class human(Player): #subclass for the human player, based on the superlass Player
@@ -41,7 +41,12 @@ class human(Player): #subclass for the human player, based on the superlass Play
         name = input("What is your name? ").strip()
         hand = []
         super().__init__(name,hand) #putting name into superclass, then calling that superclass attribute and applying it to subclass
-     
+
+    def human_declares_cards(self):
+        input(f"{self.name}, please declare your cards: ") ###I think I might be overcomplicating this. The turn machanism is an attribute of the player objects AND a procedure that occurs in the game. Idk where to implement the logic for this.
+        declared_cards = []
+        super().declare_cards(declared_cards) 
+
 class AI(Player):
     def __init__(self):
         name = "Ani"
@@ -105,6 +110,20 @@ class BSGame:
                 self.current_pile.extend(self.cards_to_move)
                 print(self.current_pile)    
                 #print(self.current_rank)
+
+    def play_turn(self, player):
+        if player == self.human:
+            print(f"Your turn, {self.human.name}.")
+            self.human_turn()
+        else:
+            print("My turn.")
+            #self.ai_turn() #Need to implement the ai turn method
+
+    def human_turn(self):
+        print(f"Your current hand: {self.human.hand}")
+        print(f"The rank for this round is: {self.current_rank}")
+        declared_cards = []
+
                            
 game = BSGame()
 game.start_game()
